@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Associação</title>
+
+    <style>
+        /*Estilização geral do corpo de página*/
+        body {
+            height: 100vh;
+            font-family: 'Google Sans', Arial, sans-serif;
+            text-align: center;
+            background:  #7ebfe0;
+            color: #333;
+            padding: 20px;
+           /* background-image: url(Escudo.png);*/
+            background-repeat: no-repeat;
+            background-size: 700px;
+            background-position: center;
+            
+        }
+        body::before{
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url(Escudo.png);
+            background-size: cover;
+            background-size: 800px;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.3; /* 👈 Aqui você controla a opacidade */
+            z-index: -1; /* Fica atrás de tudo */
+        }
+
+        /*Conteiner dos botoes do jogo*/
+        #game-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 10px;
+        }
+        /*Estilização do botoes de opções*/
+        .word-option {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 30px;
+            cursor: pointer;
+            border: none;
+            background-color: #ffffff;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        /*Efeito ao passar o mouse*/
+        .word-option:hover {
+            background-color: #f1f3f4;
+        }
+        /*Resposta certa*/
+        .correct {
+            background-color: #34a853 !important;
+            color: white;
+        }
+        /*Resposta errada*/
+        .wrong {
+            background-color: #ea4335 !important;
+            color: white;
+        }
+        /*Estilização da imagem*/
+        img {
+            width: 180px;
+            height: 180px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        /*Placar*/
+        p {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        /*Reset*/
+        #reset-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #073379;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #reset-button:hover {
+            background-color: #2350b0;
+        }
+    </style>
+</head>
+<body>
+    <h1>JOGO DE ASSOCIAÇÃO DE PALAVRAS E FIGURAS</h1>
+    <img id="image-display" src="" alt="Imagem para associação">
+    <div id="game-container"></div>
+    <p>Acertos: <span id="correct-count">0</span> | Erros: <span id="wrong-count">0</span></p>
+    <button id="reset-button" onclick="resetGame()">REINICIAR JOGO</button>
+    
+    <script>
+        /*Lista de palavras para o jogo*/
+        const words = ["ABACAXI","AMARELO", "AVIÃO", "BANANA", "BOLA", "CAMA", "CANETA", 
+        "CARRO", "COPO", "GATO", "GIRAFA", "LEÃO", "LIMÃO",
+         "LUA", "MACACO", "MALA", "MAR", "MESA", "NAVIO", "ÓCULOS", "PEIXE", 
+        "RAIO", "RIO", "ROSA", "SAPATO", "UVA",
+        ];
+        /*Objeto para armazenar os caminhos das imagens*/
+        const images = {};
+        /*Criando um objeto com os caminhos das imagens associadas às palavras*/
+        words.forEach(word => {
+            let cleanWord = word.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+            images[word] = `img/${cleanWord}.jpg`;
+        });
+        
+        let correctCount = 0;
+        let wrongCount = 0;
+        let availableWords = [...words];
+        /*Função para iniciar o jogo*/
+        function startGame() {
+            if (availableWords.length === 0) {
+                alert(`Jogo Finalizado!\nAcertos: ${correctCount}\nErros: ${wrongCount}`);
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * availableWords.length);
+            const currentWord = availableWords.splice(randomIndex, 1)[0];
+            document.getElementById("image-display").src = images[currentWord];
+            renderWords(currentWord);
+        }
+        /*Função para renderizar os botoes de palavras*/
+        function renderWords(correctWord) {
+            const container = document.getElementById("game-container");
+            container.innerHTML = "";
+            
+            let options = [correctWord];
+            while (options.length < 3) {
+                let randomWord = words[Math.floor(Math.random() * words.length)];
+                if (!options.includes(randomWord)) {
+                    options.push(randomWord);
+                }
+            }
+            
+            options.sort(() => Math.random() - 0.5);
+            
+            options.forEach(word => {
+                const button = document.createElement("button");
+                button.innerText = word;
+                button.classList.add("word-option");
+                button.onclick = () => checkAnswer(word, correctWord, button);
+                container.appendChild(button);
+            });
+        }
+        /*Função para verificar se a reposta esta correta*/
+        function checkAnswer(selectedWord, correctWord, buttonElement) {
+            if (selectedWord === correctWord) {
+                buttonElement.classList.add("correct");
+                correctCount++;
+            } else {
+                buttonElement.classList.add("wrong");
+                wrongCount++;
+            }
+            document.getElementById("correct-count").innerText = correctCount;
+            document.getElementById("wrong-count").innerText = wrongCount;
+            setTimeout(startGame, 1000);
+        }
+        /*Reset*/
+        function resetGame() {
+            correctCount = 0;
+            wrongCount = 0;
+            availableWords = [...words];
+            document.getElementById("correct-count").innerText = correctCount;
+            document.getElementById("wrong-count").innerText = wrongCount;
+            startGame();
+        }
+        /*Inicia o jogo ao carregar a pagina*/
+        startGame();
+    </script>
+</body>
+</html>
